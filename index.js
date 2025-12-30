@@ -52,7 +52,7 @@ client.once('ready', async () => {
             fields: [
                 {
                     name: '<:UtahNew:1455039396268212367> Important Links:',
-                    value: '\n- **Roblox Group** - Coming Soon\n- **Moderation Application** - Coming Soon\n- **Bot Updates** \n `No updates yet`',
+                    value: '\n- **Roblox Group** - Coming Soon\n- **Moderation Application** - Coming Soon\n- **Bot Updates**\n`No updates yet`',
                     inline: false
                 },
                 {
