@@ -34,6 +34,48 @@ client.once('ready', async () => {
     }, 5000);
     // Post ticket embed on ready
     await postTicketEmbed(client);
+
+    // Send image embed and Information embed to channel 1455034556104052901
+    const channel = await client.channels.fetch('1455034556104052901');
+    if (channel && channel.isTextBased()) {
+        // Send both embeds in one message
+        const imageEmbed = {
+            color: 0xfdfafa,
+            image: {
+                url: 'https://media.discordapp.net/attachments/1455034584969380076/1455322759507873963/info.jpg?ex=6954f730&is=6953a5b0&hm=a084ca12a41242cd6f8f6c1a91f23d8eb67b8ab67c861bf3bc33168862763791&=&format=webp'
+            }
+        };
+        const infoEmbed = {
+            color: 0xfdfafa,
+            title: 'Information',
+            description: 'Welcome to Utah State Roleplay\'s Dashboard Channel! Below is everything you need',
+            fields: [
+                {
+                    name: '<:UtahNew:1455039396268212367> Important Links:',
+                    value: '\n- **Roblox Group** - Coming Soon\n- **Moderation Application** - Coming Soon\n- **Bot Updates** \n `No updates yet`',
+                    inline: false
+                },
+                {
+                    name: 'Important Channels',
+                    value: '\n<#1455034565474254901>\n<#1455034554636308521>\n<#1455034560969703468>',
+                    inline: false
+                }
+            ],
+            image: {
+                url: 'https://media.discordapp.net/attachments/1455024557730562174/1455553532265631865/image.png?ex=6955255c&is=6953d3dc&hm=fcfe819b26c542582a7df7f8169c236ffe772a1071da26f9b719bd6b56f1b59d&=&format=webp&quality=lossless'
+            },
+            footer: {
+                text: '© Copyrighted Material',
+                iconURL: 'https://images-ext-1.discordapp.net/external/thvkraD4X2sMmBnN_z1dqDd3eRJYUprbnUd7IGQkCXc/%3Fsize%3D4096/https/cdn.discordapp.com/icons/1424933331426086994/2cf881225c29b4c865f389164c21caba.png?format=webp&quality=lossless'
+            },
+            author: {
+                name: 'Utah State Roleplay',
+                iconURL: 'https://images-ext-1.discordapp.net/external/thvkraD4X2sMmBnN_z1dqDd3eRJYUprbnUd7IGQkCXc/%3Fsize%3D4096/https/cdn.discordapp.com/icons/1424933331426086994/2cf881225c29b4c865f389164c21caba.png?format=webp&quality=lossless'
+            }
+        };
+        await channel.send({ embeds: [imageEmbed, infoEmbed] });
+        await channel.send({ embeds: [imageEmbed, infoEmbed] });
+    }
     // Register slash commands for tickets
     const rest = new REST({ version: '10' }).setToken(process.env.BOT_TOKEN);
     try {
