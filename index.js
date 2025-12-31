@@ -18,13 +18,14 @@ const client = new Client({
 
 // Welcome new members with info and membercount buttons
 client.on('guildMemberAdd', async member => {
-    const channel = await member.guild.channels.fetch('1429990116553658429').catch(() => null);
-    if (!channel || !channel.isTextBased()) return;
-    const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
-    const infoButton = new ButtonBuilder()
-        .setLabel('Information')
-        .setStyle(ButtonStyle.Secondary)
-        .setURL('https://discord.com/channels/1429990114255310849/1455927265207779370');
+    try {
+        const channel = await member.guild.channels.fetch('1429990116553658429').catch(() => null);
+        if (!channel || !channel.isTextBased()) return;
+        const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+        const infoButton = new ButtonBuilder()
+            .setLabel('Information')
+            .setStyle(ButtonStyle.Link)
+            .setURL('https://discord.com/channels/1429990114255310849/1455927265207779370');
     const memberCountButton = new ButtonBuilder()
         .setLabel(`${member.guild.memberCount}`)
         .setStyle(ButtonStyle.Secondary)
@@ -35,6 +36,9 @@ client.on('guildMemberAdd', async member => {
         content: `Welcome <@${member.id}> to California State Roleplay! We hope you enjoy your stay!`,
         components: [row]
     });
+    } catch (err) {
+        console.error('Error in guildMemberAdd handler:', err);
+    }
 });
 
 const { postTicketEmbed, handleCategorySelect, handleClaim, handleClose, handleActionSelect, TICKET_CATEGORIES } = require('./ticket/ticketManager');
@@ -149,10 +153,11 @@ client.once('ready', async () => {
 });
 
 client.on('interactionCreate', async interaction => {
-    // Ticket dropdown for category
-    if (interaction.isStringSelectMenu() && interaction.customId === 'ticket_category') {
-        return handleCategorySelect(interaction);
-    }
+    try {
+        // Ticket dropdown for category
+        if (interaction.isStringSelectMenu() && interaction.customId === 'ticket_category') {
+            return handleCategorySelect(interaction);
+        }
     // Ticket dropdown for actions
     if (interaction.isStringSelectMenu() && interaction.customId === 'ticket_action') {
         return handleActionSelect(interaction);
@@ -165,10 +170,10 @@ client.on('interactionCreate', async interaction => {
     if (interaction.isModalSubmit && interaction.customId === 'log_search_modal') {
         return handleLogSearchModal(interaction, client);
     }
-    // Rules dropdown
-    if (interaction.isStringSelectMenu() && interaction.customId === 'rules_select') {
-        let embed;
-        if (interaction.values[0] === 'discord_rules') {
+        // Rules dropdown
+        if (interaction.isStringSelectMenu() && interaction.customId === 'rules_select') {
+            let embed;
+            if (interaction.values[0] === 'discord_rules') {
             embed = {
                 color: 0x319736,
                 title: 'Discord Server Rules',
@@ -211,13 +216,16 @@ client.on('interactionCreate', async interaction => {
                 ].join('\n'),
             };
         }
-        if (embed) {
-            await interaction.reply({ embeds: [embed], ephemeral: true });
-        } else {
-            await interaction.reply({ content: 'Unknown rules category.', ephemeral: true });
+            if (embed) {
+                await interaction.reply({ embeds: [embed], ephemeral: true });
+            } else {
+                await interaction.reply({ content: 'Unknown rules category.', ephemeral: true });
+            }
+            return;
         }
-        return;
-    }
+        // end rules_select
+        
+        // Ticket claim/close buttons
     // Ticket claim/close buttons
     if (interaction.isButton()) {
         if (interaction.customId === 'ticket_claim') return handleClaim(interaction);
@@ -238,6 +246,29 @@ client.on('interactionCreate', async interaction => {
             await interaction.editReply({ content: `❌ Error: ${err.message}`, ephemeral: true });
         }
     }
+    } catch (err) {
+        console.error('Error handling interactionCreate:', err);
+        try {
+            if (interaction && typeof interaction.reply === 'function' && !interaction.replied && !interaction.deferred) {
+                await interaction.reply({ content: 'An error occurred while processing this interaction.', ephemeral: true });
+            }
+        } catch (e) {
+            // ignore reply errors (interaction may be expired)
+        }
+    }
+});
+
+// Prevent process crash when the client emits an 'error' event
+client.on('error', (err) => {
+    console.error('Discord client error event:', err);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
+process.on('uncaughtException', (err) => {
+    console.error('Uncaught Exception:', err);
 });
 
 // !rename command for tickets
