@@ -1,34 +1,52 @@
+// Legacy log channel for ticket close embeds
+const LOG_CHANNEL_ID = '1455034597288181874';
 // Handles ticket creation, claim, close, and logging
 const { ChannelType, PermissionFlagsBits, EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 
 const TICKET_CATEGORIES = {
-  general: { id: '1455034546918654189', staffRole: '1455034397987176528', additionalRole: '1455034439737544776', label: 'General' },
-  internal: { id: '1455034548294516970', staffRole: '1455034419030266004', label: 'Internal Affairs' },
-  management: { id: '1455034549720322249', staffRole: '1455034415779549204', label: 'Management' },
+  general: { id: '1429990119410110469', staffRole: '1429990114544582692', additionalRole: '1442680583661551681', label: 'General' },
+  internal: { id: '1438336065478983795', staffRole: '1443351240799944714', label: 'Internal Affairs' },
+  management: { id: '1429990119410110470', staffRole: '1429990114737524823', label: 'Management' },
 };
-const LOG_CHANNEL_ID = '1455034597288181874';
+const { logs } = require('./ticketLogsDb');
 
-async function logTicketAction(client, message) {
-  const logChannel = await client.channels.fetch(LOG_CHANNEL_ID).catch(() => null);
-  if (logChannel) logChannel.send({ content: message });
+// New logging system: store ticket logs in logs array for search
+async function logTicketAction(client, message, channel, user) {
+  // Find or create log for this channel
+  let log = logs.find(l => l.channelId === channel.id);
+  if (!log) {
+    log = {
+      channelId: channel.id,
+      channelName: channel.name,
+      userId: user?.id || null,
+      username: user?.username || null,
+      messages: []
+    };
+    logs.push(log);
+  }
+  // Add message to log
+  log.messages.push({
+    author: user?.username || 'Unknown',
+    content: message
+  });
 }
 
 async function postTicketEmbed(client) {
-  const channel = await client.channels.fetch('1455034559866601585');
+  const channel = await client.channels.fetch('1429990115974840467');
   if (!channel) return;
     // Image embed above ticket embed
     const imageEmbed = new EmbedBuilder()
-      .setImage('https://images-ext-1.discordapp.net/external/gmfslOfP72UdbY_184UXPIxgf5tnUzm5acEVidU1lgs/https/s3.galaxybot.app/server/1424933331426086994/531e60ce-f5dc-4dc2-a91c-b96ea065428d.jpeg?format=webp')
+      .setImage('https://media.discordapp.net/attachments/1455024557730562174/1455910146776629249/Screenshot_2025-12-18_at_7.56.29_am.png?ex=6956717c&is=69551ffc&hm=d60d44eccf9becd91736c00c6e1ff607b7f3d20dba8d741137079e6825515fa9&=&format=webp&quality=lossless')
       .setColor(0xbdb7b7);
-    const emoji = client.emojis.cache.get('1455039396268212367');
+    const emoji = client.emojis.cache.get('1455911436088774658');
     const emojiStr = emoji ? emoji.toString() : '❓';
     // Ticket embed
     const embed = new EmbedBuilder()
-      .setTitle('Utah Assistance')
-      .setDescription('Here is the Assistance panel for ***Utah State Roleplay***. This is where you can find the relevant ticket choice and what each one handles. Please choose the right ticket type that suits your needs.')
-      .setImage('https://media.discordapp.net/attachments/1430332755673223232/1454570533474537602/clintonfooter.jpg?ex=6952e35f&is=695191df&hm=d46f29a82e97cdecbaf940e09e7b2adee2c762f313394c76a488bf6e4aceea78&=&format=webp&width=1872&height=94')
+      .setTitle('California Assistance')
+      .setDescription('Here is the Assistance panel for ***California State Roleplay***. This is where you can find the relevant ticket choice and what each one handles. Please choose the right ticket type that suits your needs.')
+      .setImage('https://media.discordapp.net/attachments/1455024557730562174/1455910191928181019/image.png?ex=69567187&is=69552007&hm=66762b7a55a48c707ec6e3f9f2488841c51c6b5c1f83300fde7f2c9753cd5f83&=&format=webp&quality=lossless')
       .setColor(0xbdb7b7)
-      .setFooter({ text: '© 2025 Utah State Roleplay, all rights reserved.' })
+      .setFooter({ text: '© 2025 California State Roleplay, all rights reserved.' })
       .setFields(
         { name: `${emojiStr} General`, value: ' - Questions\n - Concerns\n - Game Reports', inline: true },
         { name: `${emojiStr} Internal Affairs`, value: ' - Staff Reports\n - Member Reports\n - Serious Concerns', inline: true },
@@ -72,19 +90,19 @@ async function handleCategorySelect(interaction) {
       { label: 'Close Ticket', value: 'close', description: 'Close the ticket and log the conversation' },
     ]);
   const row = new ActionRowBuilder().addComponents(actionSelect);
-  const ping = `<@${user.id}> <@&${category.staffRole}>${category.additionalRole ? ` <@&${category.additionalRole}>` : ''}`;
+  const ping = `<@${user.id}>`;
   const imageEmbed = new EmbedBuilder()
-    .setImage('https://images-ext-1.discordapp.net/external/gmfslOfP72UdbY_184UXPIxgf5tnUzm5acEVidU1lgs/https/s3.galaxybot.app/server/1424933331426086994/531e60ce-f5dc-4dc2-a91c-b96ea065428d.jpeg?format=webp')
+    .setImage('https://media.discordapp.net/attachments/1455024557730562174/1455910146776629249/Screenshot_2025-12-18_at_7.56.29_am.png?ex=6956717c&is=69551ffc&hm=d60d44eccf9becd91736c00c6e1ff607b7f3d20dba8d741137079e6825515fa9&=&format=webp&quality=lossless')
     .setColor(0xbdb7b7);
   const ticketEmbed = new EmbedBuilder()
     .setTitle('Welcome to your ticket!')
     .setDescription('Your ticket has been created. A staff member will be with you shortly.\n\n**Ticket Controls:**\n- **Claim:** Staff can claim the ticket to indicate they are assisting you.\n- **Close:** Closes the ticket and logs the conversation.')
     .setColor(0xbdb7b7)
-    .setFooter({ text: '© 2025 Utah State Roleplay, all rights reserved.' })
-    .setImage('https://media.discordapp.net/attachments/1430332755673223232/1454570533474537602/clintonfooter.jpg?ex=6952e35f&is=695191df&hm=d46f29a82e97cdecbaf940e09e7b2adee2c762f313394c76a488bf6e4aceea78&=&format=webp&width=1872&height=94');
+    .setFooter({ text: '© 2025 California State Roleplay, all rights reserved.' })
+    .setImage('https://media.discordapp.net/attachments/1455024557730562174/1455910191928181019/image.png?ex=69567187&is=69552007&hm=66762b7a55a48c707ec6e3f9f2488841c51c6b5c1f83300fde7f2c9753cd5f83&=&format=webp&quality=lossless');
   await channel.send({ content: ping, embeds: [imageEmbed, ticketEmbed], components: [row] });
   await interaction.reply({ content: `Ticket created: ${channel}`, ephemeral: true });
-  logTicketAction(interaction.client, `Ticket opened by <@${user.id}> in ${channel}`);
+  logTicketAction(interaction.client, `Ticket opened by <@${user.id}> in #${channel.name}`, channel, user);
 }
 
 async function handleClaim(interaction) {
@@ -96,7 +114,7 @@ async function handleClaim(interaction) {
   if (channel.topic && channel.topic.startsWith('Claimed:')) return interaction.reply({ content: 'This ticket is already claimed.', ephemeral: true });
   await channel.setTopic(`Claimed: ${member.id}`);
   await interaction.reply({ content: `Ticket claimed by <@${member.id}>`, ephemeral: false });
-  logTicketAction(interaction.client, `Ticket claimed by <@${member.id}> in ${channel}`);
+  logTicketAction(interaction.client, `Ticket claimed by <@${member.id}> in #${channel.name}`, channel, member.user);
   // Update the select menu to unclaim
   const messages = await channel.messages.fetch({ limit: 10 });
   const ticketMessage = messages.find(msg => msg.components && msg.components.length > 0);
@@ -164,13 +182,20 @@ async function handleUnclaim(interaction) {
   const member = interaction.member;
   const channel = interaction.channel;
   const category = Object.values(TICKET_CATEGORIES).find(cat => channel.parentId === cat.id);
-  if (!category || (!member.roles.cache.has(category.staffRole) && !(category.additionalRole && member.roles.cache.has(category.additionalRole)))) return interaction.reply({ content: 'You are not allowed to unclaim this ticket.', ephemeral: true });
-  if (!channel.topic || !channel.topic.startsWith('Claimed:')) return interaction.reply({ content: 'This ticket is not claimed.', ephemeral: true });
+  if (!category || (!member.roles.cache.has(category.staffRole) && !(category.additionalRole && member.roles.cache.has(category.additionalRole)))) {
+    await interaction.reply({ content: 'You are not allowed to unclaim this ticket.', ephemeral: true });
+    return;
+  }
+  if (!channel.topic || !channel.topic.startsWith('Claimed:')) {
+    await interaction.reply({ content: 'This ticket is not claimed.', ephemeral: true });
+    return;
+  }
   const claimerId = channel.topic.split(': ')[1];
-  if (claimerId !== member.id) return interaction.reply({ content: 'Only the staff member who claimed this ticket can unclaim it.', ephemeral: true });
+  if (claimerId !== member.id) {
+    await interaction.reply({ content: 'Only the staff member who claimed this ticket can unclaim it.', ephemeral: true });
+    return;
+  }
   await channel.setTopic('');
-  await interaction.reply({ content: `Ticket unclaimed by <@${member.id}>`, ephemeral: false });
-  logTicketAction(interaction.client, `Ticket unclaimed by <@${member.id}> in ${channel}`);
   // Update the select menu back to claim
   const messages = await channel.messages.fetch({ limit: 10 });
   const ticketMessage = messages.find(msg => msg.components && msg.components.length > 0);
@@ -185,6 +210,8 @@ async function handleUnclaim(interaction) {
     const newRow = new ActionRowBuilder().addComponents(newSelect);
     await ticketMessage.edit({ components: [newRow] });
   }
+  await interaction.reply({ content: 'Ticket unclaimed.', ephemeral: true });
+  logTicketAction(interaction.client, `Ticket unclaimed by <@${member.id}> in #${channel.name}`, channel, member.user);
 }
 
 async function handleActionSelect(interaction) {

@@ -7,7 +7,7 @@ async function handleRename(message, args) {
   const newName = args.join(' ').replace(/[^a-zA-Z0-9-_]/g, '-').slice(0, 90) || 'ticket';
   await message.channel.setName(newName);
   await message.reply(`Channel renamed to ${newName}`);
-  logTicketAction(message.client, `Ticket renamed to ${newName} by <@${message.author.id}> in ${message.channel}`);
+  logTicketAction(message.client, `Ticket renamed to ${newName} by <@${message.author.id}> in #${message.channel.name}`, message.channel, message.author);
 }
 
 async function handleAddUser(interaction) {
@@ -19,7 +19,7 @@ async function handleAddUser(interaction) {
     SendMessages: true,
   });
   await interaction.reply({ content: `Added <@${user.id}> to the ticket.`, ephemeral: false });
-  logTicketAction(interaction.client, `User <@${user.id}> added to ticket by <@${interaction.user.id}> in ${channel}`);
+  logTicketAction(interaction.client, `User <@${user.id}> added to ticket by <@${interaction.user.id}> in #${channel.name}`, channel, user);
 }
 
 module.exports = {
