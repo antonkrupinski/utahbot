@@ -1,3 +1,21 @@
+// (moved) Welcome new members handler placed after client initialization
+// index.js
+// Discord bot entry point
+const { Client, GatewayIntentBits, Partials, REST, Routes, SlashCommandBuilder, Events } = require('discord.js');
+const { deploycommands } = require('./deploy-commands');
+require('dotenv').config();
+
+const client = new Client({
+    intents: [
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.MessageContent,
+        GatewayIntentBits.GuildMembers,
+        GatewayIntentBits.GuildMessageReactions,
+    ],
+    partials: [Partials.Message, Partials.Channel, Partials.Reaction],
+});
+
 // Welcome new members with info and membercount buttons
 client.on('guildMemberAdd', async member => {
     const channel = await member.guild.channels.fetch('1429990116553658429').catch(() => null);
@@ -17,22 +35,6 @@ client.on('guildMemberAdd', async member => {
         content: `Welcome <@${member.id}> to California State Roleplay! We hope you enjoy your stay!`,
         components: [row]
     });
-});
-// index.js
-// Discord bot entry point
-const { Client, GatewayIntentBits, Partials, REST, Routes, SlashCommandBuilder, Events } = require('discord.js');
-const { deploycommands } = require('./deploy-commands');
-require('dotenv').config();
-
-const client = new Client({
-    intents: [
-        GatewayIntentBits.Guilds,
-        GatewayIntentBits.GuildMessages,
-        GatewayIntentBits.MessageContent,
-        GatewayIntentBits.GuildMembers,
-        GatewayIntentBits.GuildMessageReactions,
-    ],
-    partials: [Partials.Message, Partials.Channel, Partials.Reaction],
 });
 
 const { postTicketEmbed, handleCategorySelect, handleClaim, handleClose, handleActionSelect, TICKET_CATEGORIES } = require('./ticket/ticketManager');
