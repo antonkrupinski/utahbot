@@ -1,3 +1,23 @@
+// Welcome new members with info and membercount buttons
+client.on('guildMemberAdd', async member => {
+    const channel = await member.guild.channels.fetch('1429990116553658429').catch(() => null);
+    if (!channel || !channel.isTextBased()) return;
+    const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+    const infoButton = new ButtonBuilder()
+        .setLabel('Information')
+        .setStyle(ButtonStyle.Secondary)
+        .setURL('https://discord.com/channels/1429990114255310849/1455927265207779370');
+    const memberCountButton = new ButtonBuilder()
+        .setLabel(`${member.guild.memberCount}`)
+        .setStyle(ButtonStyle.Secondary)
+        .setCustomId('membercount_disabled')
+        .setDisabled(true);
+    const row = new ActionRowBuilder().addComponents(infoButton, memberCountButton);
+    await channel.send({
+        content: `Welcome <@${member.id}> to California State Roleplay! We hope you enjoy your stay!`,
+        components: [row]
+    });
+});
 // index.js
 // Discord bot entry point
 const { Client, GatewayIntentBits, Partials, REST, Routes, SlashCommandBuilder, Events } = require('discord.js');
