@@ -101,11 +101,11 @@ client.once('ready', async () => {
                     .setDescription('Hello, welcome to sessions! Here you can find the current server status and information.')
                     .setImage('https://media.discordapp.net/attachments/1455024557730562174/1456297683726766210/image.png?ex=6957da68&is=695688e8&hm=dfc0ce9d7e021dfc663e907f451644e76cbc6ccb71ab81137713563c54064ca1&=&format=webp&quality=lossless')
                     .addFields(
-                        { name: 'Players', value: String(playerCount), inline: true },
-                        { name: 'Server Code', value: String(serverCode), inline: true },
-                        { name: 'Server Name', value: String(serverName), inline: true },
-                        { name: 'Owner', value: String(ownerTag), inline: true },
-                        { name: 'Staff Online', value: String(staffOnline), inline: true },
+                        { name: 'Players', value: String(playerCount), inline: false },
+                        { name: 'Server Code', value: String(serverCode), inline: false },
+                        { name: 'Server Name', value: String(serverName), inline: false },
+                        { name: 'Owner', value: 'Eddie', inline: false },
+                        { name: 'Staff Online', value: String(staffOnline), inline: false },
                     )
                     .setColor(0x5763d1)
                     .setTimestamp();
@@ -132,7 +132,7 @@ client.once('ready', async () => {
     if (rulesChannel && rulesChannel.isTextBased()) {
         const bannerembed = new EmbedBuilder()
             .setColor(0x5763d1)
-            .setImage('https://media.discordapp.net/attachments/1455024557730562174/1455910147124887573/image.png?ex=6956717c&is=69551ffc&hm=d47c3d0c9a30aba79ad6cca3a8ddb463d0fb6a677c558581d1bf62bc6d84e0cb&=&format=webp&quality=lossless');
+            .setImage('https://media.discordapp.net/attachments/1455024557730562174/1456135469451444358/6.png?ex=69574355&is=6955f1d5&hm=7bc5c021080ecb0eb0ea534434fdcc6d947d70d1d62c448d85a93619de6b5a15&=&format=webp&quality=lossless');
         const rulesEmbed = new EmbedBuilder()
             .setTitle('Regulations')
             .setDescription('Hello, welcome to our regulations section. Please select from the dropdown menu below to view either our Discord server rules or our in-game rules.')
@@ -140,7 +140,7 @@ client.once('ready', async () => {
                 { name: 'New Coming Soon', value: 'We are planning to have a new regulations (FAQ) by the end of this week, please use this until further notice.' }
             )
             .setColor(0x5763d1)
-            .setImage('https://media.discordapp.net/attachments/1455024557730562174/1456135469451444358/6.png?ex=69574355&is=6955f1d5&hm=7bc5c021080ecb0eb0ea534434fdcc6d947d70d1d62c448d85a93619de6b5a15&=&format=webp&quality=lossless');
+            .setImage('https://media.discordapp.net/attachments/1455024557730562174/1456297683726766210/image.png?ex=6957da68&is=695688e8&hm=dfc0ce9d7e021dfc663e907f451644e76cbc6ccb71ab81137713563c54064ca1&=&format=webp&quality=lossless');
         const rulesSelect = new StringSelectMenuBuilder()
             .setCustomId('rules_select')
             .setPlaceholder('Select rules to view...')
@@ -294,7 +294,6 @@ client.on('interactionCreate', async interaction => {
     if (interaction.isButton()) {
         // Ticket claim/close
         if (interaction.customId === 'ticket_claim') return handleClaim(interaction);
-                const sent = await message.channel.send({ content: '@everyone', embeds: [bannerembed, embed], components: [row], allowedMentions: { parse: ['everyone'] } });
 
         // Session vote button: customId format 'session_vote:<channelId>'
         if (interaction.customId && interaction.customId.startsWith('session_vote:')) {
