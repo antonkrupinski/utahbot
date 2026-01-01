@@ -8,7 +8,7 @@ try {
     throw new Error('node-fetch could not be loaded');
 }
 
-const ERLC_API_KEY = 'GpfIQtszfqwJkOqeNvWr-PRiEpLxEBOtiZGBjzGJttmxhSKaGKFGPiXeaPqeo';
+const ERLC_API_KEY = 'tFmcrJoZGcoyHDhEtuoU-McPOMtPJsJdYXecuGcSptAqXXnQYhyEgrwHOQEHT';
 const ERLC_API_URL = 'https://api.policeroleplay.community/v1/server/command';
 
 

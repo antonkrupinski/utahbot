@@ -36,17 +36,17 @@ async function postTicketEmbed(client) {
   if (!channel) return;
     // Image embed above ticket embed
     const imageEmbed = new EmbedBuilder()
-      .setImage('https://media.discordapp.net/attachments/1455024557730562174/1455910146776629249/Screenshot_2025-12-18_at_7.56.29_am.png?ex=6956717c&is=69551ffc&hm=d60d44eccf9becd91736c00c6e1ff607b7f3d20dba8d741137079e6825515fa9&=&format=webp&quality=lossless')
-      .setColor(0xbdb7b7);
-    const emoji = client.emojis.cache.get('1455911436088774658');
+      .setImage('https://media.discordapp.net/attachments/1455024557730562174/1456135469715947581/LOS_ANGELES_STATE_2.png?ex=69574355&is=6955f1d5&hm=0a911d0f5e5cf37439ff43431e337847ccb0e8a6bbc17bb4537da3855bb48f58&=&format=webp&quality=lossless')
+      .setColor(0x5763d1);
+    const emoji = client.emojis.cache.get('1456286965048545473');
     const emojiStr = emoji ? emoji.toString() : '❓';
     // Ticket embed
     const embed = new EmbedBuilder()
-      .setTitle('California Assistance')
-      .setDescription('Here is the Assistance panel for ***California State Roleplay***. This is where you can find the relevant ticket choice and what each one handles. Please choose the right ticket type that suits your needs.')
-      .setImage('https://media.discordapp.net/attachments/1455024557730562174/1455910191928181019/image.png?ex=69567187&is=69552007&hm=66762b7a55a48c707ec6e3f9f2488841c51c6b5c1f83300fde7f2c9753cd5f83&=&format=webp&quality=lossless')
-      .setColor(0xbdb7b7)
-      .setFooter({ text: '© 2025 California State Roleplay, all rights reserved.' })
+      .setTitle('Los Angeles Assistance')
+      .setDescription('Here is the Assistance panel for ***Los Angeles State Roleplay***. This is where you can find the relevant ticket choice and what each one handles. Please choose the right ticket type that suits your needs.')
+      .setImage('https://media.discordapp.net/attachments/1455024557730562174/1456297683726766210/image.png?ex=6957da68&is=695688e8&hm=dfc0ce9d7e021dfc663e907f451644e76cbc6ccb71ab81137713563c54064ca1&=&format=webp&quality=lossless')
+      .setColor(0x5763d1)
+      .setFooter({ text: '© 2025 Los Angeles State Roleplay, all rights reserved.' })
       .setFields(
         { name: `${emojiStr} General`, value: ' - Questions\n - Concerns\n - Game Reports', inline: true },
         { name: `${emojiStr} Internal Affairs`, value: ' - Staff Reports\n - Member Reports\n - Serious Concerns', inline: true },
@@ -92,14 +92,14 @@ async function handleCategorySelect(interaction) {
   const row = new ActionRowBuilder().addComponents(actionSelect);
   const ping = `<@${user.id}>`;
   const imageEmbed = new EmbedBuilder()
-    .setImage('https://media.discordapp.net/attachments/1455024557730562174/1455910146776629249/Screenshot_2025-12-18_at_7.56.29_am.png?ex=6956717c&is=69551ffc&hm=d60d44eccf9becd91736c00c6e1ff607b7f3d20dba8d741137079e6825515fa9&=&format=webp&quality=lossless')
-    .setColor(0xbdb7b7);
+    .setImage('https://media.discordapp.net/attachments/1455024557730562174/1456135469715947581/LOS_ANGELES_STATE_2.png?ex=69574355&is=6955f1d5&hm=0a911d0f5e5cf37439ff43431e337847ccb0e8a6bbc17bb4537da3855bb48f58&=&format=webp&quality=lossless')
+    .setColor(0x5763d1);
   const ticketEmbed = new EmbedBuilder()
     .setTitle('Welcome to your ticket!')
     .setDescription('Your ticket has been created. A staff member will be with you shortly.\n\n**Ticket Controls:**\n- **Claim:** Staff can claim the ticket to indicate they are assisting you.\n- **Close:** Closes the ticket and logs the conversation.')
-    .setColor(0xbdb7b7)
-    .setFooter({ text: '© 2025 California State Roleplay, all rights reserved.' })
-    .setImage('https://media.discordapp.net/attachments/1455024557730562174/1455910191928181019/image.png?ex=69567187&is=69552007&hm=66762b7a55a48c707ec6e3f9f2488841c51c6b5c1f83300fde7f2c9753cd5f83&=&format=webp&quality=lossless');
+    .setColor(0x5763d1)
+    .setFooter({ text: '© 2025 Los Angeles State Roleplay, all rights reserved.' })
+    .setImage('https://media.discordapp.net/attachments/1455024557730562174/1456297683726766210/image.png?ex=6957da68&is=695688e8&hm=dfc0ce9d7e021dfc663e907f451644e76cbc6ccb71ab81137713563c54064ca1&=&format=webp&quality=lossless');
   await channel.send({ content: ping, embeds: [imageEmbed, ticketEmbed], components: [row] });
   await interaction.reply({ content: `Ticket created: ${channel}`, ephemeral: true });
   logTicketAction(interaction.client, `Ticket opened by <@${user.id}> in #${channel.name}`, channel, user);

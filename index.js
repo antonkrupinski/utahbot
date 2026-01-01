@@ -16,6 +16,10 @@ const client = new Client({
     partials: [Partials.Message, Partials.Channel, Partials.Reaction],
 });
 
+// In-memory session vote tracking: channelId -> { messageId, voters:Set, voterOrder:[], completed }
+const sessionVotes = new Map();
+const SESSION_ROLE_ID = '1429990114678935594';
+
 // Welcome new members with info and membercount buttons
 client.on('guildMemberAdd', async member => {
     try {
@@ -33,7 +37,7 @@ client.on('guildMemberAdd', async member => {
         .setDisabled(true);
     const row = new ActionRowBuilder().addComponents(infoButton, memberCountButton);
     await channel.send({
-        content: `Welcome <@${member.id}> to California State Roleplay! We hope you enjoy your stay!`,
+        content: `Welcome <@${member.id}> to Los Angeles State Roleplay! We hope you enjoy your stay!`,
         components: [row]
     });
     } catch (err) {
@@ -53,6 +57,63 @@ client.once('ready', async () => {
     try {
         const playerCount = await getErlcPlayers();
         await client.user.setActivity(`Erlc Players: ${playerCount}`, { type: 0 });
+
+        // Post ERLC status embed to status channel (includes server info and staff-online)
+        (async () => {
+            try {
+                const statusChannel = await client.channels.fetch('1429990116331491421').catch(() => null);
+                if (!statusChannel || !statusChannel.isTextBased()) return;
+                const { EmbedBuilder } = require('discord.js');
+                const guild = statusChannel.guild;
+                const serverCode = guild?.id ?? 'unknown';
+                const serverName = guild?.name ?? 'unknown';
+                let ownerTag = 'unknown';
+                try {
+                    const owner = await guild.fetchOwner();
+                    ownerTag = owner?.user ? `${owner.user.tag}` : ownerTag;
+                } catch (e) {
+                    // ignore
+                }
+
+                // Determine staff roles from ticket categories and count online staff
+                const staffRoleIds = Object.values(TICKET_CATEGORIES || {}).map(c => c.staffRole).filter(Boolean);
+                let staffOnline = 'unknown';
+                try {
+                    await guild.members.fetch(); // populate cache
+                    const members = guild.members.cache;
+                    const staffMembers = members.filter(m => staffRoleIds.some(rid => m.roles.cache.has(rid)));
+                    // If presence data is available, count those not offline
+                    const onlineCount = staffMembers.filter(m => m.presence && m.presence.status !== 'offline').size;
+                    if (staffMembers.size === 0) staffOnline = '0';
+                    else if (onlineCount > 0) staffOnline = `${onlineCount}/${staffMembers.size}`;
+                    else {
+                        // presence may be unavailable due to intents; fall back to total staff count
+                        staffOnline = `${staffMembers.size} (presence unavailable)`;
+                    }
+                } catch (e) {
+                    staffOnline = 'unknown';
+                }
+                const bannerembed = new EmbedBuilder()
+                .setImage('https://media.discordapp.net/attachments/1455024557730562174/1456307605302415517/larp-dc-banner.png?ex=6957e3a5&is=69569225&hm=73eb30ea29c417a888c7a4a66cc5d2258c756980082abcf9fb82c5090aaac370&=&format=webp&quality=lossless')
+                .setColor(0x5763d1);
+                const statusEmbed = new EmbedBuilder()
+                    .setTitle('ERLC Server Status')
+                    .setDescription('Hello, welcome to sessions! Here you can find the current server status and information.')
+                    .setImage('https://media.discordapp.net/attachments/1455024557730562174/1456297683726766210/image.png?ex=6957da68&is=695688e8&hm=dfc0ce9d7e021dfc663e907f451644e76cbc6ccb71ab81137713563c54064ca1&=&format=webp&quality=lossless')
+                    .addFields(
+                        { name: 'Players', value: String(playerCount), inline: true },
+                        { name: 'Server Code', value: String(serverCode), inline: true },
+                        { name: 'Server Name', value: String(serverName), inline: true },
+                        { name: 'Owner', value: String(ownerTag), inline: true },
+                        { name: 'Staff Online', value: String(staffOnline), inline: true },
+                    )
+                    .setColor(0x5763d1)
+                    .setTimestamp();
+                await statusChannel.send({ embeds: [bannerembed, statusEmbed] });
+            } catch (err) {
+                console.error('Failed to send ERLC status embed:', err);
+            }
+        })();
     } catch (e) {
         await client.user.setActivity('Erlc Players: error', { type: 0 });
     }
@@ -70,13 +131,16 @@ client.once('ready', async () => {
     const rulesChannel = await client.channels.fetch('1429990115974840466').catch(() => null);
     if (rulesChannel && rulesChannel.isTextBased()) {
         const bannerembed = new EmbedBuilder()
-            .setColor(0x319736)
+            .setColor(0x5763d1)
             .setImage('https://media.discordapp.net/attachments/1455024557730562174/1455910147124887573/image.png?ex=6956717c&is=69551ffc&hm=d47c3d0c9a30aba79ad6cca3a8ddb463d0fb6a677c558581d1bf62bc6d84e0cb&=&format=webp&quality=lossless');
         const rulesEmbed = new EmbedBuilder()
             .setTitle('Regulations')
             .setDescription('Hello, welcome to our regulations section. Please select from the dropdown menu below to view either our Discord server rules or our in-game rules.')
-            .setColor(0x319736)
-            .setImage('https://media.discordapp.net/attachments/1455024557730562174/1455910191928181019/image.png?ex=69567187&is=69552007&hm=66762b7a55a48c707ec6e3f9f2488841c51c6b5c1f83300fde7f2c9753cd5f83&=&format=webp&quality=lossless');
+            .setFields(
+                { name: 'New Coming Soon', value: 'We are planning to have a new regulations (FAQ) by the end of this week, please use this until further notice.' }
+            )
+            .setColor(0x5763d1)
+            .setImage('https://media.discordapp.net/attachments/1455024557730562174/1456135469451444358/6.png?ex=69574355&is=6955f1d5&hm=7bc5c021080ecb0eb0ea534434fdcc6d947d70d1d62c448d85a93619de6b5a15&=&format=webp&quality=lossless');
         const rulesSelect = new StringSelectMenuBuilder()
             .setCustomId('rules_select')
             .setPlaceholder('Select rules to view...')
@@ -103,19 +167,19 @@ client.once('ready', async () => {
     if (channel && channel.isTextBased()) {
         // Send both embeds in one message
         const imageEmbed = {
-            color: 0x319736,
+            color: 0x5763d1,
             image: {
-                url: 'https://media.discordapp.net/attachments/1455024557730562174/1455910146399273011/CSRP_INFO.png?ex=6956717c&is=69551ffc&hm=f63a228fa9771d622b482464a6291d47b86465d39e763c59796ab20d10df6002&=&format=webp&quality=lossless'
+                url: 'https://media.discordapp.net/attachments/1455024557730562174/1456135471720693864/1.png?ex=69574356&is=6955f1d6&hm=58477ef4c448636bdbfbfb16ded4ffddcc785f2626b92cfbf13e52426ddf9a2d&=&format=webp&quality=lossless'
             }
         };
         const infoEmbed = {
-            color: 0x319736,
+            color: 0x5763d1,
             title: 'Information',
-            description: 'Welcome to California State Roleplay\'s Dashboard Channel! Below is everything you need',
+            description: 'Welcome to Los Angeles State Roleplay\'s Dashboard Channel! Below is everything you need',
             fields: [
                 {
-                    name: '<:California:1455911436088774658> Important Links:',
-                    value: '\n- **Roblox Group** - Coming Soon\n- **Moderation Application** - **[Click Me](https://docs.google.com/forms/d/e/1FAIpQLSezVNksME3fGnGxXsDjOmW3FdepuX0aYqZmaPfuyjbMydAyXQ/viewform?usp=dialog)**\n- **Bot Updates**\n`Changed to California State Roleplay Assets`',
+                    name: '<:larp:1456286965048545473> Important Links:',
+                    value: '\n- **Roblox Group** - Coming Soon\n- **Moderation Application** - **[Click Me](https://docs.google.com/forms/d/e/1FAIpQLSezVNksME3fGnGxXsDjOmW3FdepuX0aYqZmaPfuyjbMydAyXQ/viewform?usp=dialog)**\n- **Bot Updates**\n`Changed to Los Angeles State Roleplay Assets`',
                     inline: false
                 },
                 {
@@ -125,15 +189,15 @@ client.once('ready', async () => {
                 }
             ],
             image: {
-                url: 'https://media.discordapp.net/attachments/1455024557730562174/1455910191928181019/image.png?ex=69567187&is=69552007&hm=66762b7a55a48c707ec6e3f9f2488841c51c6b5c1f83300fde7f2c9753cd5f83&=&format=webp&quality=lossless'
+                url: 'https://media.discordapp.net/attachments/1455024557730562174/1456297683726766210/image.png?ex=6957da68&is=695688e8&hm=dfc0ce9d7e021dfc663e907f451644e76cbc6ccb71ab81137713563c54064ca1&=&format=webp&quality=lossless'
             },
             footer: {
                 text: '© Copyrighted Material',
-                iconURL: 'https://media.discordapp.net/attachments/1429990115974840461/1455927813436739675/5612fa371eb7caa6acae94d6b9d91cb6.png?ex=695681f0&is=69553070&hm=0af39e2bb0e936ace47d6ddffa10594a4a0746b03c17eed18f070f65f7793cb3&=&format=webp&quality=lossless'
+                iconURL: 'https://media.discordapp.net/attachments/1429990115974840461/1456287935430394000/IMG_0799-removebg-preview.png?ex=6957d154&is=69567fd4&hm=95a64f2045990bc0563d0b74fb0b27a4e2a6dcfa1df0663ef411c2e92cfef4f3&=&format=webp&quality=lossless'
             },
             author: {
-                name: 'California State Roleplay',
-                iconURL: 'https://media.discordapp.net/attachments/1429990115974840461/1455927813436739675/5612fa371eb7caa6acae94d6b9d91cb6.png?ex=695681f0&is=69553070&hm=0af39e2bb0e936ace47d6ddffa10594a4a0746b03c17eed18f070f65f7793cb3&=&format=webp&quality=lossless'
+                name: 'Los Angeles State Roleplay',
+                iconURL: 'https://media.discordapp.net/attachments/1429990115974840461/1456287935430394000/IMG_0799-removebg-preview.png?ex=6957d154&is=69567fd4&hm=95a64f2045990bc0563d0b74fb0b27a4e2a6dcfa1df0663ef411c2e92cfef4f3&=&format=webp&quality=lossless'
             }
         };
         await channel.send({ embeds: [imageEmbed, infoEmbed] });
@@ -175,10 +239,10 @@ client.on('interactionCreate', async interaction => {
             let embed;
             if (interaction.values[0] === 'discord_rules') {
             embed = {
-                color: 0x319736,
+                color: 0x5763d1,
                 title: 'Discord Server Rules',
                 image: {
-                    url: 'https://media.discordapp.net/attachments/1455024557730562174/1455910147124887573/image.png?ex=6956717c&is=69551ffc&hm=d47c3d0c9a30aba79ad6cca3a8ddb463d0fb6a677c558581d1bf62bc6d84e0cb&=&format=webp&quality=lossless'
+                    url: 'https://media.discordapp.net/attachments/1455024557730562174/1456135471183954082/2.png?ex=69574356&is=6955f1d6&hm=5a88570702d40e34deaf256fc4a4a60503b257fd2d51aa84b8a2493a3487c83b&=&format=webp&quality=lossless'
                 },
                 description: [
                     '`1` Swearing\nWhilst we allow swearing, constant use of profanities especially in unneeded situations will result in moderation. The use of any vulgar profanity will also result in moderation.',
@@ -197,10 +261,10 @@ client.on('interactionCreate', async interaction => {
             };
         } else if (interaction.values[0] === 'ingame_rules') {
             embed = {
-                color: 0x319736,
+                color: 0x5763d1,
                 title: 'In-Game Rules',
                 image: {
-                    url: 'https://media.discordapp.net/attachments/1455024557730562174/1455910192260459520/image.png?ex=6956718b&is=6955200f&hm=1f3f3f3e2e2f4f5d6e7f8f9fa0b1c2d3e4f5f6f7f8f9fa0b1c2d3e4f5f6f7f8f9&=&format=webp&quality=lossless'
+                    url: 'https://media.discordapp.net/attachments/1455024557730562174/1456135470789558353/3.png?ex=69574355&is=6955f1d5&hm=0b2ccffe37bcdb4125b5b894a79b73c165ee0fafbb93eeb05c69e694b0700d3a&=&format=webp&quality=lossless'
                 },
                 description: [
                     '`1` No exploiting or cheating.',
@@ -226,10 +290,82 @@ client.on('interactionCreate', async interaction => {
         // end rules_select
         
         // Ticket claim/close buttons
-    // Ticket claim/close buttons
+    // Button interactions
     if (interaction.isButton()) {
+        // Ticket claim/close
         if (interaction.customId === 'ticket_claim') return handleClaim(interaction);
-        if (interaction.customId === 'ticket_close') return handleClose(interaction);
+                const sent = await message.channel.send({ content: '@everyone', embeds: [bannerembed, embed], components: [row], allowedMentions: { parse: ['everyone'] } });
+
+        // Session vote button: customId format 'session_vote:<channelId>'
+        if (interaction.customId && interaction.customId.startsWith('session_vote:')) {
+            try {
+                const channelId = interaction.customId.split(':')[1];
+                const session = sessionVotes.get(channelId);
+                if (!session || session.completed) {
+                    return interaction.reply({ content: 'This session vote is no longer active.', ephemeral: true });
+                }
+                const userId = interaction.user.id;
+                if (session.voters.has(userId)) {
+                    return interaction.reply({ content: 'You have already voted.', ephemeral: true });
+                }
+                session.voters.add(userId);
+                session.voterOrder.push(userId);
+
+                // Update vote button label and edit original message
+                const { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } = require('discord.js');
+                const votesCount = session.voters.size;
+                const button = new ButtonBuilder()
+                    .setCustomId(interaction.customId)
+                    .setLabel(`Vote (${votesCount})`)
+                    .setStyle(ButtonStyle.Primary);
+                if (session.completed) button.setDisabled(true);
+                const row = new ActionRowBuilder().addComponents(button);
+
+                // Try to update original message; fall back to acknowledge
+                try {
+                    const msg = await interaction.channel.messages.fetch(session.messageId).catch(() => null);
+                    if (msg) await msg.edit({ components: [row] });
+                    await interaction.deferUpdate();
+                } catch (e) {
+                    await interaction.reply({ content: `Vote recorded (${votesCount}).`, ephemeral: true });
+                }
+
+                // When threshold reached, send notification and disable button
+                if (votesCount >= 5 && !session.completed) {
+                    session.completed = true;
+                    try {
+                        const mentions = session.voterOrder.slice(0, 5).map(id => `<@${id}>`).join(' ');
+                        const bannerembed = new EmbedBuilder()
+                            .setColor(0x5763d1)
+                            .setImage('https://media.discordapp.net/attachments/1455024557730562174/1456307605302415517/larp-dc-banner.png?ex=6957e3a5&is=69569225&hm=73eb30ea29c417a888c7a4a66cc5d2258c756980082abcf9fb82c5090aaac370&=&format=webp&quality=lossless');
+                         await interaction.channel.send({ embeds: [bannerembed] });
+                        const reachedEmbed = new EmbedBuilder()
+                            .setTitle('Session Started')
+                            .setDescription(`The session has reached the required number of votes (${votesCount}) and will be starting soon! Please be patient as our staff get online to moderate.`)
+                            .addFields({ name: 'Voters', value: mentions })
+                            .setColor(0x5763d1)
+                            .setImage('https://media.discordapp.net/attachments/1455024557730562174/1456297683726766210/image.png?ex=6957da68&is=695688e8&hm=dfc0ce9d7e021dfc663e907f451644e76cbc6ccb71ab81137713563c54064ca1&=&format=webp&quality=lossless')
+                            .setTimestamp();
+                        await interaction.channel.send({ content: '@everyone', mentions, embeds: [reachedEmbed] });
+                        // disable button visually
+                        const disabledButton = new ButtonBuilder()
+                            .setCustomId(interaction.customId)
+                            .setLabel(`Vote (${votesCount})`)
+                            .setStyle(ButtonStyle.Secondary)
+                            .setDisabled(true);
+                        const disabledRow = new ActionRowBuilder().addComponents(disabledButton);
+                        const msg = await interaction.channel.messages.fetch(session.messageId).catch(() => null);
+                        if (msg) await msg.edit({ components: [disabledRow] });
+                    } catch (err) {
+                        console.error('Error sending session reached embed:', err);
+                    }
+                }
+            } catch (err) {
+                console.error('Error handling session vote button:', err);
+                try { await interaction.reply({ content: 'Error recording vote.', ephemeral: true }); } catch(_){}
+            }
+            return;
+        }
     }
     // /add-user slash command
     if (interaction.isChatInputCommand() && interaction.commandName === 'add-user') {
@@ -277,6 +413,100 @@ client.on('messageCreate', async message => {
     if (!message.content.startsWith('!rename ')) return;
     const args = message.content.slice('!rename '.length).trim().split(/ +/);
     await handleRename(message, args);
+});
+
+// Session commands: -sessionvote and -sessionend
+client.on('messageCreate', async message => {
+    if (message.author.bot) return;
+    const content = message.content.trim();
+    const { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, PermissionFlagsBits } = require('discord.js');
+
+    // Start a session vote in this channel
+    if (content === '-sessionvote') {
+        // Only allow users with the session role
+        const member = message.member;
+        if (!member || !member.roles.cache.has(SESSION_ROLE_ID)) {
+            await message.reply('You do not have permission to start a session vote.');
+            return;
+        }
+        // Prevent multiple sessions in the same channel
+        if (sessionVotes.has(message.channel.id) && !sessionVotes.get(message.channel.id).completed) {
+            await message.reply('A session vote is already active in this channel.');
+            return;
+        }
+        const button = new ButtonBuilder()
+            .setCustomId(`session_vote:${message.channel.id}`)
+            .setLabel('Vote (0)')
+            .setStyle(ButtonStyle.Secondary);
+        const row = new ActionRowBuilder().addComponents(button);
+        const bannerembed = new EmbedBuilder()
+            .setColor(0x5763d1)
+            .setImage('https://media.discordapp.net/attachments/1455024557730562174/1456307605302415517/larp-dc-banner.png?ex=6957e3a5&is=69569225&hm=73eb30ea29c417a888c7a4a66cc5d2258c756980082abcf9fb82c5090aaac370&=&format=webp&quality=lossless');
+        const embed = new EmbedBuilder()
+            .setTitle('Session Vote')
+            .setDescription(`${message.author.tag} has started a session vote. Click the button to join the vote.`)
+            .setColor(0x5763d1)
+            .setImage('https://media.discordapp.net/attachments/1455024557730562174/1456297683726766210/image.png?ex=6957da68&is=695688e8&hm=dfc0ce9d7e021dfc663e907f451644e76cbc6ccb71ab81137713563c54064ca1&=&format=webp&quality=lossless')
+            .setTimestamp();
+        const sent = await message.channel.send({ content: '@everyone', embeds: [bannerembed, embed], components: [row] });
+        sessionVotes.set(message.channel.id, { messageId: sent.id, voters: new Set(), voterOrder: [], completed: false });
+        return;
+    }
+
+    // End the session and clean the channel (role-restricted)
+    if (content === '-sessionend') {
+        // Only allow users with the session role
+        const member = message.member;
+        if (!member || !member.roles.cache.has(SESSION_ROLE_ID)) {
+            await message.reply('You do not have permission to end the session.');
+            return;
+        }
+        const channel = message.channel;
+        // Fetch all messages in the channel
+        let all = [];
+        try {
+            let lastId;
+            while (true) {
+                const fetched = await channel.messages.fetch({ limit: 100, before: lastId });
+                if (fetched.size === 0) break;
+                all = all.concat(Array.from(fetched.values()));
+                lastId = fetched.last()?.id;
+                if (fetched.size < 100) break;
+            }
+        } catch (e) {
+            // ignore
+        }
+        // include any recently cached messages (ensure we have the latest)
+        try {
+            const recent = await channel.messages.fetch({ limit: 100 });
+            all = all.concat(Array.from(recent.values()));
+        } catch (e) {}
+        // Remove duplicates and sort by createdTimestamp
+        const uniq = Array.from(new Map(all.map(m => [m.id, m])).values()).sort((a,b) => a.createdTimestamp - b.createdTimestamp);
+        if (uniq.length <= 1) {
+            await message.channel.send('Nothing to clean.');
+            return;
+        }
+        // Keep the first (oldest) message, delete the rest
+        const toDelete = uniq.slice(1);
+        for (const msg of toDelete) {
+            try {
+                await msg.delete().catch(() => null);
+            } catch (e) {}
+        }
+        // Clear any session tracking for this channel
+        sessionVotes.delete(channel.id);
+         const bannerembed = new EmbedBuilder()
+            .setColor(0x5763d1)
+            .setImage('https://media.discordapp.net/attachments/1455024557730562174/1456307605302415517/larp-dc-banner.png?ex=6957e3a5&is=69569225&hm=73eb30ea29c417a888c7a4a66cc5d2258c756980082abcf9fb82c5090aaac370&=&format=webp&quality=lossless');
+        const endEmbed = new EmbedBuilder()
+            .setTitle('Session Ended')
+            .setDescription(`${message.author.tag} ended the session and we hope you can join us for the second session!`)
+            .setColor(0x5763d1)
+            .setTimestamp();
+        await channel.send({ embeds: [bannerembed, endEmbed] });
+        return;
+    }
 });
 
 client.login(process.env.BOT_TOKEN);

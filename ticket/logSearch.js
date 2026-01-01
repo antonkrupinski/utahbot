@@ -11,7 +11,7 @@ async function postLogSearchEmbed(client) {
     const embed = new EmbedBuilder()
         .setTitle('Ticket Log Search')
         .setDescription('Click the button below to search ticket logs by Discord username.')
-        .setColor(0x5865F2);
+        .setColor(0x5763d1);
     const row = new ActionRowBuilder().addComponents(
         new ButtonBuilder()
             .setCustomId('log_search_button')
