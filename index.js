@@ -336,12 +336,12 @@ client.on('interactionCreate', async interaction => {
                         const mentions = session.voterOrder.slice(0, 5).map(id => `<@${id}>`).join(' ');
                         const bannerembed = new EmbedBuilder()
                             .setColor(0x5763d1)
-                            .setImage('https://media.discordapp.net/attachments/1455024557730562174/1456307605302415517/larp-dc-banner.png?ex=6957e3a5&is=69569225&hm=73eb30ea29c417a888c7a4a66cc5d2258c756980082abcf9fb82c5090aaac370&=&format=webp&quality=lossless');
+                            .setImage('https://media.discordapp.net/attachments/1429990115974840461/1456632246613049480/9.png?ex=695911fe&is=6957c07e&hm=5f091b7164e408e092be7ca74aa65f4b53e43ff9207afc403f84b59fe79baa6f&=&format=webp&quality=lossless');
                          await interaction.channel.send({ embeds: [bannerembed] });
                         const reachedEmbed = new EmbedBuilder()
                             .setTitle('Session Started')
-                            .setDescription(`The session has reached the required number of votes (${votesCount}) and will be starting soon! Please be patient as our staff get online to moderate.`)
-                            .addFields({ name: 'Voters', value: mentions })
+                            .setDescription(`Hello, we have voted (${votesCount}) and at this time, the Los Angeles Roleplay session will begin. All members are expected to be present, attentive, and prepared to participate in an organized and respectful manner. Please ensure all communications are professional and follow server guidelines as we proceed with today’s session.`)
+                            .addFields({ name: 'Voters', value: mentions, inline: false }, { name: 'Server Code', value: 'newyear', inline: false }, { name: 'Server Name', value: 'Los Angeles State Roleplay', inline: false }, { name: 'Owner', value: 'Eddie', inline: false })
                             .setColor(0x5763d1)
                             .setImage('https://media.discordapp.net/attachments/1455024557730562174/1456297683726766210/image.png?ex=6957da68&is=695688e8&hm=dfc0ce9d7e021dfc663e907f451644e76cbc6ccb71ab81137713563c54064ca1&=&format=webp&quality=lossless')
                             .setTimestamp();
@@ -440,7 +440,7 @@ client.on('messageCreate', async message => {
         const row = new ActionRowBuilder().addComponents(button);
         const bannerembed = new EmbedBuilder()
             .setColor(0x5763d1)
-            .setImage('https://media.discordapp.net/attachments/1455024557730562174/1456307605302415517/larp-dc-banner.png?ex=6957e3a5&is=69569225&hm=73eb30ea29c417a888c7a4a66cc5d2258c756980082abcf9fb82c5090aaac370&=&format=webp&quality=lossless');
+            .setImage('https://media.discordapp.net/attachments/1429990115974840461/1456632246613049480/9.png?ex=695911fe&is=6957c07e&hm=5f091b7164e408e092be7ca74aa65f4b53e43ff9207afc403f84b59fe79baa6f&=&format=webp&quality=lossless');
         const embed = new EmbedBuilder()
             .setTitle('Session Vote')
             .setDescription(`${message.author.tag} has started a session vote. Click the button to join the vote.`)
@@ -497,7 +497,7 @@ client.on('messageCreate', async message => {
         sessionVotes.delete(channel.id);
          const bannerembed = new EmbedBuilder()
             .setColor(0x5763d1)
-            .setImage('https://media.discordapp.net/attachments/1455024557730562174/1456307605302415517/larp-dc-banner.png?ex=6957e3a5&is=69569225&hm=73eb30ea29c417a888c7a4a66cc5d2258c756980082abcf9fb82c5090aaac370&=&format=webp&quality=lossless');
+            .setImage('https://media.discordapp.net/attachments/1429990115974840461/1456632246613049480/9.png?ex=695911fe&is=6957c07e&hm=5f091b7164e408e092be7ca74aa65f4b53e43ff9207afc403f84b59fe79baa6f&=&format=webp&quality=lossless');
         const endEmbed = new EmbedBuilder()
             .setTitle('Session Ended')
             .setDescription(`${message.author.tag} ended the session and we hope you can join us for the second session!`)
